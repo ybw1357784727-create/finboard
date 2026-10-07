@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>金融工作台 · 工薪投资者版</title>
+<style>
+:root{
+  --ink:#1e293b; --mut:#64748b; --line:#e2e8f0; --bg:#f4f6fb; --card:#fff;
+  --pri:#4f46e5; --pri-soft:#eef2ff; --green:#0f766e; --red:#b91c1c; --amber:#b45309;
+  --side:#0f172a; --side-ink:#cbd5e1;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased}
+/* ===== 工作台骨架：桌面侧边栏 + 移动底部 TabBar ===== */
+.shell{display:grid;grid-template-columns:216px minmax(0,1fr);max-width:1280px;margin:0 auto;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--side);color:var(--side-ink);
+  padding:22px 14px 18px;display:flex;flex-direction:column;gap:5px;overflow-y:auto}
+.brand{color:#fff;font-weight:800;font-size:17px;line-height:1.4;padding:0 10px 16px}
+.brand small{display:block;font-weight:500;font-size:11.5px;color:#7c8db0;margin-top:3px}
+.side button{display:flex;align-items:center;gap:9px;text-align:left;background:transparent;border:0;
+  color:#94a3b8;padding:11px 13px;border-radius:11px;font-size:13.5px;cursor:pointer;font-weight:600;transition:.15s;width:100%}
+.side button:hover{background:rgba(148,163,184,.12);color:#e2e8f0}
+.side button.active{background:var(--pri);color:#fff}
+.side-foot{margin-top:auto;padding:12px 10px 0;font-size:11px;color:#64748b;line-height:1.7;border-top:1px solid rgba(148,163,184,.18)}
+.main{padding:16px 18px 40px;min-width:0}
+.tabbar{display:none}
+/* ===== topbar ===== */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:2px 0 10px}
+.topbar h1{font-size:19px;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--pri-soft);color:var(--pri);font-weight:600;white-space:nowrap}
+.badge.warn{background:#fef3c7;color:var(--amber)}
+.badge.ok{background:#dcfce7;color:#15803d}
+.sub{color:var(--mut);font-size:12.5px;margin:2px 0 8px;line-height:1.6}
+.riskbar{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;border-radius:10px;
+  padding:8px 12px;font-size:12px;line-height:1.6;margin:0 0 14px}
+/* ===== 布局 ===== */
+section.tab{display:none}
+section.tab.active{display:block;animation:fadein .18s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(15,23,42,.06);margin-bottom:14px}
+.card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border-radius:14px;padding:12px 14px;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.kpi .t{font-size:11.5px;color:var(--mut)}
+.kpi .v{font-size:19px;font-weight:750;margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:10.5px;color:var(--mut);margin-top:2px}
+.v.green{color:var(--green)} .v.red{color:var(--red)} .v.amber{color:var(--amber)}
+/* ===== 表格 & 输入 ===== */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:600;font-size:11.5px;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:4px 5px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+input,select{font:inherit;font-size:13px;color:var(--ink);border:1px solid var(--line);border-radius:8px;
+  padding:6px 8px;background:#fff;width:100%;min-width:0}
+input:focus,select:focus{outline:2px solid #c7d2fe;border-color:var(--pri)}
+input.num{text-align:right;font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:9px;padding:7px 13px;
+  font-size:13px;cursor:pointer;font-weight:600;transition:.15s}
+.btn:hover{border-color:var(--pri);color:var(--pri)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.pri:hover{filter:brightness(1.08);color:#fff}
+.btn.sm{padding:3px 9px;font-size:12px;border-radius:7px}
+.btn.ghost-danger{color:var(--red)}
+.btn.ghost-danger:hover{border-color:var(--red)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.hint{font-size:11.5px;color:var(--mut);line-height:1.6;margin-top:8px}
+/* ===== 图表 ===== */
+.chart-flex{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.legend{font-size:13px}
+.lg{display:flex;align-items:center;gap:7px;padding:3.5px 0}
+.lg .dot{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+.lg b{margin-left:auto;font-variant-numeric:tabular-nums;padding-left:14px}
+.lg i{font-style:normal;color:var(--mut);font-size:12px;width:46px;text-align:right}
+.role-tag{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.role-tag.atk{background:#ffedd5;color:#c2410c;border-color:#fdba74}
+.role-tag.def{background:#dcfce7;color:#15803d;border-color:#86efac}
+/* ===== T+1 速览 widget ===== */
+.brief-card{background:linear-gradient(135deg,#eef2ff,#f0f9ff);border:1px solid #c7d2fe}
+.idx-chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+.idx-chip{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12px;line-height:1.5}
+.idx-chip b{font-variant-numeric:tabular-nums}
+.up{color:#dc2626} .down{color:#16a34a}
+/* ===== news ===== */
+.mkt-table td.up{color:#dc2626;font-weight:600}
+.mkt-table td.down{color:#16a34a;font-weight:600}
+.news-block h4{margin:16px 0 8px;font-size:14px}
+.news-block ul{margin:0;padding-left:18px}
+.news-block li{margin:9px 0;font-size:13.5px;line-height:1.65}
+.why{color:#475569;font-size:12.5px;background:#f8fafc;border-radius:8px;padding:6px 10px;margin-top:5px;line-height:1.6}
+/* ===== docs ===== */
+.doc{font-size:13.8px;line-height:1.8}
+.doc h2{font-size:17px;margin:26px 0 10px;border-left:4px solid var(--pri);padding-left:10px}
+.doc h2:first-child{margin-top:4px}
+.doc h3{font-size:14.5px;margin:18px 0 8px}
+.doc p{margin:8px 0}
+.doc ul,.doc ol{padding-left:22px;margin:8px 0}
+.doc li{margin:5px 0}
+.doc table{margin:10px 0;font-size:12.8px}
+.doc code{background:#f1f5f9;border-radius:5px;padding:1px 6px;font-size:12.5px}
+.doc blockquote{margin:10px 0;padding:8px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-size:12.8px;color:#92400e}
+.doc .callout{background:var(--pri-soft);border:1px solid #c7d2fe;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:13px}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.flow .step{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:12.5px;line-height:1.6;position:relative}
+.flow .step b{display:block;font-size:13px;margin-bottom:4px;color:var(--pri)}
+.flow .step:not(:last-child)::after{content:"→";position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:var(--mut);font-weight:700;z-index:2}
+footer{margin-top:24px;padding:14px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;
+  font-size:12px;color:#7f1d1d;line-height:1.75}
+a{color:var(--pri)}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* ===== 移动端自适应（H5）===== */
+@media (max-width:920px){
+  .shell{grid-template-columns:1fr}
+  .side{display:none}
+  .main{padding:12px 12px calc(74px + env(safe-area-inset-bottom))}
+  .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:60;
+    background:rgba(255,255,255,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);padding:5px 4px calc(5px + env(safe-area-inset-bottom))}
+  .tabbar button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;
+    font-size:10.5px;color:var(--mut);cursor:pointer;padding:4px 2px;border-radius:9px}
+  .tabbar button i{font-style:normal;font-size:19px;line-height:1.2}
+  .tabbar button.active{color:var(--pri);font-weight:700;background:var(--pri-soft)}
+  .topbar h1{font-size:17px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .sp-kpis{grid-template-columns:repeat(2,1fr)}
+  .kpis .kpi:last-child{grid-column:span 2}
+  .grid2{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr 1fr}
+  .flow .step::after{display:none}
+  .kpi .v{font-size:17px}
+  input,select{font-size:16px;padding:9px 10px}  /* 16px 防止 iOS 聚焦时自动放大 */
+  table{font-size:12.5px}
+  .btn{padding:9px 14px}
+  .chart-flex{justify-content:center}
+  .doc{font-size:13.2px}
+}
+@media (max-width:380px){
+  .kpis{gap:7px}
+  .kpi{padding:10px}
+  .idx-chip{font-size:11px}
+}
+
+/* ===== 每日解读一本书 ===== */
+.book-item{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;background:#fafbff}
+.book-item summary{cursor:pointer;font-size:13.5px;font-weight:600;line-height:1.6}
+.book-item .hint{display:inline;margin:0}
+.book-day{font-size:12.8px;line-height:1.7;padding:8px 4px 2px;border-top:1px dashed var(--line);margin-top:8px}
+
+.sp-seg{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--mut)}
+.sp-seg.on{background:#1e293b;color:#fff;border-color:#1e293b}
+.sp-sel{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink)}
+.sp-lab{font-size:12px;color:var(--mut);margin:10px 0 4px}
+.sp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.t-red{color:#dc2626;font-weight:600} .t-green{color:#16a34a;font-weight:600}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ===== 桌面侧边栏 ===== -->
+<aside class="side">
+  <div class="brand">📊 金融工作台<small>工薪投资者版 · 15万本金 / 年存10万</small></div>
+  <button data-tab="dash" class="active">📊 资产看板</button>
+  <button data-tab="news">📰 T+1 资讯</button>
+  <button data-tab="edu">📚 财商进阶</button>
+  <button data-tab="help">📖 使用说明</button>
+  <div class="side-foot">T+1 延迟数据 · 非实时行情<br>年化10%仅为期望目标<br>不构成任何承诺与投资建议</div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <h1>📊 金融工作台
+    <span class="badge" id="badge-date">T+1</span>
+    <span class="badge ok" id="badge-sync">自动同步</span>
+  </h1>
+</header>
+<div class="sub">适配画像：可投本金 15 万 · 年新增储蓄 10 万 · 可承受 10%–30% 浮亏 · 期望年化 10%（仅为目标，不构成承诺）· 资产/负债/收益数据以企微财务表为唯一来源，每日 08:00 自动同步</div>
+<div class="riskbar">⚠️ <b>风险提示</b>：年化 10% 仅为个人期望目标，无法被任何保证或承诺；本看板为 T+1 延迟信息，不构成投资建议；任何资产均可能亏损本金，请独立决策。</div>
+
+<!-- ================= TAB 1: 资产看板（数据全部自动同步，无需手动填写） ================= -->
+<section class="tab active" id="tab-dash">
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>🥧 资产类别占比 <span class="badge" id="sheet-badge">加载中…</span></h3>
+      <div class="hint" style="margin:-4px 0 10px">数据来源：企微财务表「存款合计」构成（农行理财/红利基金/投顾/黄金）· 你每月更新表格后次日自动同步</div>
+      <div class="chart-flex"><div id="donut-cat"></div><div class="legend" id="legend-cat"></div></div>
+    </div>
+    <div class="card">
+      <h3>🛡️⚔️ 攻防仓位结构</h3>
+      <div class="chart-flex"><div id="donut-role"></div><div class="legend" id="legend-role"></div></div>
+      <div id="drawdown-gauge" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📈 存款与资产趋势 <span class="hint" style="margin:0">财务表历史数据 · 每月更新表格后自动延长</span></h3>
+    <div id="chart-trend"></div>
+    <div class="legend" id="legend-trend" style="display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:6px"></div>
+  </div>
+
+  <div class="card">
+    <h3>💰 资产明细 · 收益情况 · 表格规则</h3>
+    <div class="scroll-x"><table id="tbl-sheet-assets">
+      <thead><tr>
+        <th style="min-width:130px">类别</th><th class="num" style="min-width:100px">最新金额(元)</th>
+        <th class="num" style="min-width:70px">占比</th><th class="num" style="min-width:90px">收益情况(元)</th>
+        <th style="min-width:120px">表格规则备注</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="hint">「收益情况」「合理占比备注」均同步自企微财务表对应列；攻防归类：农行理财/黄金=防守，红利基金/投顾=进攻。收益为负不代表操作错误——权益类浮亏在 10%–30% 承受区间内属正常波动。</div>
+  </div>
+
+  <div class="card">
+    <h3>💳 负债 · 仅信用卡分期 <span class="badge" id="liab-badge">加载中…</span></h3>
+    <div id="liab-root"></div>
+  </div>
+
+  <div class="card">
+    <h3>🛒 消费情况 · 记账本 <span class="badge" id="spend-badge">加载中…</span></h3>
+    <div id="fin-spend"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>🧮 每月新增资金分配计算器 <span class="hint" style="margin:0">42/40/18 管道</span></h3>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:13px;color:var(--mut)">每月可存</label>
+        <input id="calc-monthly" type="number" value="8300" step="100" style="max-width:130px" oninput="calcAlloc()">
+        <span style="font-size:13px;color:var(--mut)">元</span>
+      </div>
+      <div id="calc-out" style="margin-top:10px"></div>
+    </div>
+    <div class="card brief-card">
+      <h3>📰 T+1 今日速览 <span class="badge" id="mini-brief-badge">加载中…</span></h3>
+      <div id="mini-brief"></div>
+    </div>
+  </div>
+</section>
+
+<section class="tab" id="tab-news">
+  <div class="card">
+    <h3>📰 T+1 每日资讯 <span class="badge" id="news-badge">加载中…</span></h3>
+    <div class="hint" style="margin:0 0 10px">只保留对个人投资者有参考意义的信息，过滤八卦与短期噪音。本板块为 T+1 语义：今日复盘昨日，不提供实时行情。内容由数据文件 <code>news.js</code> 驱动，更新无需改动页面。</div>
+    <div id="news-root"></div>
+  </div>
+</section>
+
+<section class="tab" id="tab-edu">
+  <div class="card">
+    <h3>📚 每日解读一本书 · 财商充电 <span class="badge" id="book-badge">加载中…</span></h3>
+    <div class="hint" style="margin:-4px 0 10px">每天自动更新一篇：每本书拆 3 天 —— 第1天核心命题 → 第2天方法论 → 第3天落地避坑，篇末附一条贴合你真实账本（本金15万/年存10万/分期4.1万）的小行动。本季书单 20 本。</div>
+    <div id="book-today"></div>
+    <details style="margin-top:14px">
+      <summary style="cursor:pointer;font-size:13px;color:var(--pri);font-weight:600">📅 往季书目归档（点击展开）</summary>
+      <div id="book-archive" style="margin-top:8px"></div>
+    </details>
+  </div>
+<div class="card doc">
+    <h2>财商进阶第 1 讲：仓位管理 —— 15 万本金的攻防阵型</h2>
+    <blockquote>⚠️ 开讲第一条：年化 10% 是你的<b>期望目标</b>，不是任何资产或配置方案能承诺的结果。本讲所有数字都是框架推演，历史回撤数据不代表未来。市场有风险，决策需独立。</blockquote>
+
+    <h3>一、先把"能承受 30% 浮亏"翻译成仓位上限</h3>
+    <p>多数人对自己的风险承受力估计过高——直到第一次 20% 回撤。进阶投资者的做法是<b>用回撤预算反推仓位</b>，而不是拍脑袋。</p>
+    <div class="callout"><b>回撤预算公式（简化版）</b>：组合极端浮亏 ≈ 进攻仓位 × 权益极端回撤 + 防守仓位 × 防守资产回撤</div>
+    <p>代入历史量级（权益按沪深 300 级别熊市最大回撤约 -45% 计，防守侧理财/债基/黄金混合按 -5% 计）：</p>
+    <table>
+      <thead><tr><th>进攻仓位</th><th>组合极端浮亏估算</th><th>是否在 10–30% 承受区</th></tr></thead>
+      <tbody>
+        <tr><td>30%</td><td>30%×45% + 70%×5% = <b>17.0%</b></td><td>✅ 舒适区</td></tr>
+        <tr><td>40%</td><td>40%×45% + 60%×5% = <b>21.0%</b></td><td>✅ 可接受</td></tr>
+        <tr><td>50%</td><td>50%×45% + 50%×5% = <b>25.0%</b></td><td>🟡 接近上限</td></tr>
+        <tr><td>60%</td><td>60%×45% + 40%×5% = <b>29.0%</b></td><td>🔴 贴边，情绪易崩</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>结论一</b>：你的进攻仓位（股票+权益类基金）合理区间是 <b>30%–45%</b>，硬上限 50%。注意两个修正项：① 个股/行业主题的极端回撤可达 -60% 以上，卫星仓要另打折；② 浮亏 25% 时你每月还要继续定投，心理负担比静态数字更重——所以<b>宁可取区间下沿，留出继续加仓的底气</b>。</div>
+
+    <h3>二、攻防资产分类：不是按品种，是按功能</h3>
+    <p>同一品种在不同组合里可以是攻也可以是守。分类看它在<b>组合回撤时的任务</b>：</p>
+    <table>
+      <thead><tr><th>功能层</th><th>资产</th><th>回撤时的任务</th><th>目标占比</th></tr></thead>
+      <tbody>
+        <tr><td>🛡️ 流动性防守</td><td>现金、货币基金</td><td>应急 + 抄底弹药，永不浮亏</td><td>15%–20%</td></tr>
+        <tr><td>🛡️ 收益防守</td><td>R2 银行理财、纯债基金</td><td>提供 2%–4% 票息垫，回撤 &lt;3%</td><td>25%–30%</td></tr>
+        <tr><td>🛡️ 对冲防守</td><td>黄金（ETF/积存金）</td><td>对冲地缘与货币风险，与股低相关</td><td>8%–12%</td></tr>
+        <tr><td>⚔️ 核心进攻</td><td>沪深300 / 中证500 / 纳指100 等宽基</td><td>赚经济增长与企业盈利的钱</td><td>25%–35%</td></tr>
+        <tr><td>⚔️ 卫星进攻</td><td>个股、行业主题、红利低波等风格</td><td>博取超额收益，允许高波动</td><td>8%–12%</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>结论二</b>：防守 50%–60% + 核心进攻 25%–35% + 卫星 8%–12%。这就是看板里"55% 防守 / 35% 进攻 / 10% 卫星"的来源——它是一个<b>区间中枢</b>，不是刻死的数字。</div>
+
+    <h3>三、15 万本金的落位示例（对照看板示例台账）</h3>
+    <table>
+      <thead><tr><th>落位</th><th>金额</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>现金/货基（流动性防守）</td><td class="num">28,600</td><td>应急金，任何情况下不动用去抄底</td></tr>
+        <tr><td>R2理财 + 纯债（收益防守）</td><td class="num">45,000</td><td>票息垫，回撤&lt;3%</td></tr>
+        <tr><td>黄金 ETF + 积存金（对冲）</td><td class="num">15,000</td><td>与股票低相关</td></tr>
+        <tr><td>宽基指数基金（核心进攻）</td><td class="num">37,000</td><td>沪深300 + 中证500 + 纳指100</td></tr>
+        <tr><td>红利低波 + 纳指（风格分散）</td><td class="num">15,000</td><td>不同经济周期的分散</td></tr>
+        <tr><td>个股组合（卫星）</td><td class="num">25,000</td><td>单一个股 ≤5% 总资产硬顶</td></tr>
+      </tbody>
+    </table>
+    <ol>
+      <li><b>应急金先于一切收益</b>。3–6 个月生活费（本画像约 2.5–3 万）放在货基/活期，<b>任何情况下不动用它去抄底</b>——它是你失业、生病时不必割肉权益资产的保险。</li>
+      <li><b>进攻仓内部也要分散</b>：宽基 ≥70%（A股大盘 + 中小盘 + 海外QDII），个股/主题 ≤30%。纳指100这类QDII提供的是"不同经济周期"的分散，不是短期涨跌的对冲。</li>
+      <li><b>卫星仓设"单一个股 ≤5% 总资产"硬顶</b>（15.86 万的 5% ≈ 7,900 元）。单票超限就是赌博，与"禁止高风险投机"的自我约束冲突。</li>
+    </ol>
+
+    <h3>四、每月 8,300 元新增资金的分配纪律</h3>
+    <p>打工人最大的武器不是择时，是<b>稳定现金流 + 机械执行</b>。月增 8,300 元的建议管道：</p>
+    <div class="callout">
+      <b>8,300 元/月</b><br>
+      ├── <b>3,500 元</b> → 进攻定投（宽基 2,500 + 卫星/主题 1,000，发薪后第 2 天自动扣）<br>
+      ├── <b>3,300 元</b> → 防守垫仓（短债/纯债基金或理财，滚存至季度末转 R2 理财）<br>
+      └── <b>1,500 元</b> → 机动池（货基；用于年度保费、意外支出、极端回撤时的加仓弹药）
+    </div>
+    <ol>
+      <li><b>定投日设在发薪后 1–2 天</b>，钱还没机会被消费掉（先支付自己）。</li>
+      <li><b>回撤期不停定投</b>。跌 20% 时同样的 3,500 元多买 25% 的份额——定投的微笑曲线恰恰需要下跌段来画左半边。</li>
+      <li><b>年终奖/13薪分批投入</b>：单笔 ≥2 万的资金，拆 3–4 笔、间隔 2–4 周投入，避免"一把梭在山顶"。</li>
+      <li>机动池累积到 ≥1 万且市场出现极端信号时才启用，<b>平时它就是安静的货基</b>。</li>
+    </ol>
+
+    <h3>五、再平衡：被低估的收益增强器</h3>
+    <p>再平衡的本质是<b>制度化地"高抛低吸"</b>，把情绪从决策中剔除。</p>
+    <p><b>双触发机制</b>：</p>
+    <ul>
+      <li><b>日历触发</b>：每半年（建议 6 月末 / 12 月末）固定检视一次，无论是否偏离。</li>
+      <li><b>阈值触发</b>：任一大类实际占比偏离目标 ±5 个百分点，立即处理。</li>
+    </ul>
+    <p><b>执行优先级（成本从低到高）</b>：</p>
+    <ol>
+      <li><b>现金流再平衡</b>：用每月新增资金补低配类别——零交易成本、不产生赎回费，<b>打工人首选</b>。</li>
+      <li><b>红利/利息再投入</b>：防守侧产生的票息直接投向低配侧。</li>
+      <li><b>卖出再平衡</b>：偏离 &gt;8 个百分点且新增资金不够用时才卖；注意持有期（基金 7 天内惩罚性赎回费 1.5%、多数理财有封闭期）。</li>
+    </ol>
+    <div class="callout"><b>实例推演</b>：若黄金因大涨使占比从 10% → 15%（超目标 +5pp），同时权益跌到 30%（低于目标 -5pp），则：黄金止盈约 5pp（≈7,900 元）→ 分两笔补入宽基。这一步在学术回测中每年可贡献约 0.3%–0.8% 的组合增益，且<b>显著降低波动</b>——但它要求你在黄金大涨时舍得卖，这正是纪律的价值。</div>
+
+    <h3>六、市场信号怎么用：只调档位，不换挡</h3>
+    <p>进阶投资者与韭菜的分水岭：<b>信号用来在区间内微调，不用来全仓进出</b>。</p>
+    <table>
+      <thead><tr><th>信号</th><th>含义</th><th>动作映射</th></tr></thead>
+      <tbody>
+        <tr><td>沪深300 PE 分位（近10年）</td><td>估值贵贱</td><td>&lt;30%：进攻取区间上沿(45%)；&gt;70%：取下沿(30%)；&gt;85%：卫星仓清零</td></tr>
+        <tr><td>股权风险溢价 ERP = 1/PE − 10Y国债</td><td>股票相对债券的性价比</td><td>&gt;5% 股票便宜；&lt;2% 防御</td></tr>
+        <tr><td>情绪面：两市成交额 / 两融余额 / 新发基金</td><td>拥挤度</td><td>成交连续&gt;2.5万亿 + 爆款基金频出 = 过热，停止追加进攻仓</td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><b>铁律</b>：任何单一信号最多触发 ±5pp 的仓位微调；三个信号共振才允许 ±8pp；<b>永远保留防守底仓</b>。像 08-05 那样科创50单日+4.78%、两市2.66万亿的放量进攻日，正确的动作是"确认进攻仓未超限、继续按计划定投"，而不是追高加码。</div>
+
+    <h3>七、信用卡与负债风控（本讲速记版）</h3>
+    <ol>
+      <li><b>全额自动还款是唯一模式</b>。最低还款的名义日息 0.05% ≈ 年化 18.25%，比你的期望收益 10% 高得多——欠最低还款的同时做任何投资都是负套利。</li>
+      <li><b>分期"免息"看 IRR</b>：手续费分期实际年化普遍 13%–16%，除非 0 手续费，否则不为消费分期。</li>
+      <li><b>负债率红线</b>：总负债/总资产 &lt;30%（当前示例台账 8,600/158,600 ≈ 5.4%，健康）；信用卡额度使用率建议 &lt;30%。</li>
+      <li><b>消费贷/信用贷一律不进投资账户</b>。杠杆投资在本框架中是禁入区，没有例外。</li>
+      <li>信用卡账单日/还款日、信贷到期日全部记入台账负债栏，看板每月校验一次。</li>
+    </ol>
+
+    <h3>八、执行清单（本周可完成）</h3>
+    <ul>
+      <li>☐ 把真实持仓填入「看板·记账」页，替换示例数据（本页自动重算）</li>
+      <li>☐ 核算自己真实的应急金缺口（3–6 个月生活费）</li>
+      <li>☐ 设定发薪日自动转账 + 基金定投（金额参考第四节管道）</li>
+      <li>☐ 给每个大类写下自己的目标占比区间（防守 50–60 / 进攻 25–35 / 卫星 8–12）</li>
+      <li>☐ 在日历里加入两个再平衡检视日：12-31 与 06-30</li>
+    </ul>
+
+    <h3>九、常见错误对照表</h3>
+    <table>
+      <thead><tr><th>错误</th><th>为什么错</th><th>正确姿势</th></tr></thead>
+      <tbody>
+        <tr><td>大涨日追高加仓</td><td>情绪驱动，推高成本</td><td>定投机械执行，超阈值才动作</td></tr>
+        <tr><td>回撤 15% 停止定投</td><td>放弃最便宜的筹码段</td><td>回撤是定投的朋友，不是敌人</td></tr>
+        <tr><td>盈利后不再平衡</td><td>进攻仓被动超限，风险悄悄放大</td><td>半年检视 + ±5pp 阈值</td></tr>
+        <tr><td>信用卡滚动负债去投资</td><td>18% 资金成本 vs 不确定收益</td><td>先清消费负债，再谈进攻</td></tr>
+        <tr><td>单一行业/个股重仓</td><td>个体风险无法分散</td><td>单票 ≤5% 总资产硬顶</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout"><b>下一讲预告</b>：《再平衡实战与组合体检》——用真实台账数据做一次完整再平衡推演，引入组合波动率/最大回撤的自测方法，以及市场信号仪表盘的数据源搭建。</div>
+    <blockquote>⚠️ 风险提示：本文为财商教育内容，所有比例、公式与案例均为框架演示，不构成任何投资建议。年化 10% 仅为个人期望目标，无法被任何保证或承诺；权益资产可能出现 30% 以上回撤，历史表现不代表未来收益。请基于自身真实现金流与风险承受能力独立决策。市场有风险，投资需谨慎。</blockquote>
+  </div>
+</section>
+
+<section class="tab" id="tab-help">
+  <div class="card doc">
+    <h2>使用说明</h2>
+
+    <h3>这是什么</h3>
+    <p>一个为「本金 15 万 / 年存 10 万 / 可承受 10%–30% 浮亏」的工薪投资者定制的 T+1 金融工作台，四个板块：</p>
+    <ul>
+      <li><b>📊 资产看板</b>：资产负债、攻防结构、收益情况、消费多周期分析（当月/月/季/年）、趋势图，全部自动计算；</li>
+      <li><b>📰 T+1 资讯</b>：每个交易日复盘前一日市场，只保留对个人投资者有参考意义的信息；</li>
+      <li><b>📚 财商进阶</b>：每日解读一本书（3 天一本）+ 体系化课程；</li>
+      <li><b>📖 使用说明</b>：本页。</li>
+    </ul>
+
+    <h3>数据从哪里来（全自动同步，无需手动填写）</h3>
+    <table>
+      <thead><tr><th>数据源</th><th>同步内容</th><th>机制</th></tr></thead>
+      <tbody>
+        <tr><td>🏦 企微财务表</td><td>存款合计、四类资产（农行理财/红利基金/投顾/黄金）、收益情况列、合理占比备注、信用卡分期负债</td><td>每天 08:00 自动读取表格并解析；你每月照常更新表格即可</td></tr>
+        <tr><td>🛒 记账本 App</td><td>每日消费记录 → 当月/历史月/季/年 多周期分析：柱状图、分类占比、大额 TOP、智能解读（规则自动生成）</td><td>记账本每天自动备份到 iCloud，Mac 同步后解析全历史明细（读到的是截至昨日的备份，天然 T+1）</td></tr>
+        <tr><td>📰 行情与资讯</td><td>指数行情、政策与市场要闻</td><td>每个交易日自动抓取并规则化过滤</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">⚠️ 登录态失效时（卡片显示「未同步」）：在 Mac 终端执行
+      <code>cd ~/Documents/Codex/2026-08-06/15-10-10-30-10-1 &amp;&amp; /Users/yanbowen/.local/n/bin/node work/scripts/fetch_sheet.mjs login</code>，
+      用企业微信 App 扫码一次即可恢复（会话保存在本机）。</div>
+
+    <h3>统计口径（按你的要求设定）</h3>
+    <ul>
+      <li><b>负债只算信用卡分期</b>（金额以财务表同步值为准）；房租、车子费用等生活开支<b>不计入负债</b>。</li>
+      <li><b>资产类别分析以财务表为准</b>：农行理财 / 红利基金 / 投顾 / 黄金四块，占比、金额、趋势均同步自表格，不再手动填写。</li>
+      <li><b>收益情况</b>：同步自财务表新增的「收益情况」列，看板 KPI 与资产明细表均展示（当前值为页面顶部实时显示）。</li>
+      <li><b>净资产</b> = 存款合计 − 信用卡分期余额；<b>回撤预算</b> = 进攻% × 45% + 防守% × 5%，并标出在你 10%–30% 承受区间中的位置。</li>
+    </ul>
+
+    <h3>每日解读一本书</h3>
+    <p>「📚 财商进阶」顶部每天自动切换一篇：20 本经典财商书 × 每本 3 天（核心命题→方法论→落地避坑），篇末行动项都绑定你的真实数字。本季排期 2026-08-14 ~ 2026-10-12，读完自动进入下一季。想提前看某本书，展开「往季书目归档」即可。</p>
+
+    <h3>访问方式与链接</h3>
+    <ul>
+      <li><b>💻 主链接（电脑浏览器打开）</b>：<code>https://ybw1357784727-create.github.io/finboard/</code> —— GitHub Pages 托管，Chrome/Edge/Safari 均可，建议收藏到书签栏。</li>
+      <li><b>🔗 备用链接</b>：<code>https://finboard-kele4.vercel.app</code> —— 同一套内容；该域名在部分网络下可能被拦截，打不开就用主链接。</li>
+      <li>两个链接数据完全一致，每天 08:00 自动抓取财务表+记账本并重新部署，刷新页面即可看到新数据。</li>
+      <li>本机网络已为 github.io 配置直连规则；若某天打不开，先确认 Mac 上的 Clash Verge 处于开启状态。</li>
+    </ul>
+
+    <h3>T+1 是什么意思</h3>
+    <p>看板资讯<b>复盘的是前一个交易日</b>，不提供盘中实时行情；财务数据每天 08:00 同步一次（读到的是截至昨日的数据）。对月定投 + 再平衡框架的投资者，T+1 足够且更健康——帮你避开盯盘情绪。</p>
+
+    <h3>数据与隐私</h3>
+    <ul>
+      <li>所有抓取、解析、部署都在你自己的 Mac 上运行，原始账单不上传任何第三方服务器。</li>
+      <li>看板页面只展示汇总数字、分类统计与大额明细，不含卡号、密码等敏感信息。</li>
+      <li>页面为零依赖单文件应用（无外部 CDN），离线也能打开最后一次部署的版本。</li>
+    </ul>
+
+    <h3>关于后续做成微信小程序</h3>
+    <p>本看板结构（数据文件 + 渲染层 + 定时同步）与小程序 <code>data + setData</code> 模型天然对应；迁移时只需把同步脚本搬到云函数/服务器定时任务。注意小程序合规：理财教育内容可以，<b>荐股、代客理财、收益承诺</b>属于禁入区。</p>
+
+    <h3>免责声明</h3>
+    <blockquote>本看板为财商教育与个人财务追踪工具，所有内容不构成投资建议；年化 10% 仅为期望目标，不构成任何承诺或保证；市场有风险，投资需谨慎。</blockquote>
+  </div>
+</section>
+
+<footer>⚠️ <b>风险提示</b>：本看板为 T+1 延迟数据，非实时行情，不构成任何投资建议。年化 10% 仅为个人期望目标，历史收益不代表未来表现，任何资产均可能亏损本金。投资有风险，入市需谨慎；请根据自身现金流与风险承受能力独立决策。</footer>
+</main>
+
+<!-- ===== 移动端底部 TabBar（H5）===== -->
+<nav class="tabbar">
+  <button data-tab="dash" class="active"><i>📊</i><span>看板</span></button>
+  <button data-tab="news"><i>📰</i><span>资讯</span></button>
+  <button data-tab="edu"><i>📚</i><span>学习</span></button>
+  <button data-tab="help"><i>📖</i><span>帮助</span></button>
+</nav>
+</div><!-- /shell -->
+
+<script src="data/news.js"></script>
+<script src="data/finance.js"></script>
+<script src="data/books.js"></script>
+<script>
+"use strict";
+/* ================= 工具 ================= */
+const $ = s => document.querySelector(s);
+const fmt = v => Math.round(v).toLocaleString("zh-CN");
+const fmt2 = v => (+v).toLocaleString("zh-CN", {minimumFractionDigits:2, maximumFractionDigits:2});
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+/* ================= 数据（全部来自自动同步，无手动输入） ================= */
+const FIN = window.FINANCE_DATA || {};
+const SHEET = FIN.sheet || null;
+const SPEND = FIN.spend || null;
+const ROLE_MAP = {"农行理财":"def","黄金":"def","红利基金":"atk","投顾":"atk"};
+const CAT_COLORS = {"农行理财":"#38bdf8","红利基金":"#6366f1","投顾":"#f97316","黄金":"#eab308"};
+
+function sheetCompute(){
+  if (!SHEET || !SHEET.savings || !SHEET.savings.latest) return null;
+  const totalA = SHEET.savings.latest.amount || 0;
+  const totalL = (SHEET.liabs && SHEET.liabs.total) || 0;
+  let atk = 0, def = 0;
+  for (const a of (SHEET.assets || [])){
+    const v = (a.latest && a.latest.amount) || 0;
+    if ((ROLE_MAP[a.name] || "def") === "atk") atk += v; else def += v;
+  }
+  const debtRatio = totalA > 0 ? totalL / totalA : 0;
+  const atkPct = totalA > 0 ? atk / totalA : 0;
+  const dd = atkPct * 0.45 + (1 - atkPct) * 0.05;
+  return { totalA, totalL, net: totalA - totalL, atk, def, debtRatio, atkPct, dd, profit: SHEET.profit_total };
+}
+
+/* ================= KPI ================= */
+function renderKPIs(c){
+  if (!c){ $("#kpis").innerHTML = '<div class="card" style="grid-column:1/-1"><div class="hint">财务表尚未同步，请先在 Mac 完成一次扫码（见使用说明）。</div></div>'; return; }
+  const p = c.profit;
+  const pCls = p == null ? "" : p >= 0 ? "green" : "red";
+  const pTxt = p == null ? "—" : (p > 0 ? "+" : "") + fmt2(p) + " 元";
+  const debtCls = c.debtRatio >= 0.3 ? "red" : c.debtRatio >= 0.2 ? "amber" : "green";
+  const spendTxt = (SPEND && SPEND.month_total) ? fmt(SPEND.month_total) + " 元" : "—";
+  const spendSub = (SPEND && SPEND.day_avg) ? `记账本 · 日均 ${fmt2(SPEND.day_avg)} 元` : "记账本同步后显示";
+  $("#kpis").innerHTML = `
+    <div class="kpi"><div class="t">总资产（存款合计）</div><div class="v">${fmt(c.totalA)} 元</div><div class="d">企微财务表 ${esc((SHEET.savings.latest||{}).ym||"")}</div></div>
+    <div class="kpi"><div class="t">负债（仅信用卡分期）</div><div class="v ${c.totalL>0?'red':''}">${fmt(c.totalL)} 元</div><div class="d">房租/车子费用不计入</div></div>
+    <div class="kpi"><div class="t">净资产</div><div class="v">${fmt(c.net)} 元</div><div class="d">负债率 <span style="color:${debtCls==='green'?'var(--green)':debtCls==='amber'?'var(--amber)':'var(--red)'}">${(c.debtRatio*100).toFixed(1)}%</span>（健康线&lt;30%）</div></div>
+    <div class="kpi"><div class="t">累计收益（财务表）</div><div class="v ${pCls}">${pTxt}</div><div class="d">同步自「收益情况」列</div></div>
+    <div class="kpi"><div class="t">本月消费</div><div class="v amber">${spendTxt}</div><div class="d">${spendSub}</div></div>`;
+}
+
+/* ================= 图表 ================= */
+function donutSVG(segs, size, r, sw, cTop, cBot){
+  const c = 2*Math.PI*r, cx = size/2, cy = size/2;
+  const total = segs.reduce((s,x)=>s+x[1],0) || 1;
+  let off = 0, parts = "";
+  for (const seg of segs){
+    const name = seg[0], v = seg[1], col = seg[2];
+    if (v <= 0) continue;
+    const dash = v/total*c;
+    parts += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${col||CAT_COLORS[name]||'#cbd5e1'}" stroke-width="${sw}" stroke-dasharray="${dash.toFixed(2)} ${c.toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    off += dash;
+  }
+  if (!parts) parts = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e2e8f0" stroke-width="${sw}"/>`;
+  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">${parts}
+    <text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="12" fill="#64748b">${cTop}</text>
+    <text x="${cx}" y="${cy+15}" text-anchor="middle" font-size="16" font-weight="700" fill="#1e293b">${cBot}</text></svg>`;
+}
+function legend(items){
+  return items.map(([col,name,v,p]) =>
+    `<div class="lg"><span class="dot" style="background:${col}"></span>${esc(name)}<i>${p.toFixed(1)}%</i><b>${fmt(v)}</b></div>`).join("");
+}
+function renderDonuts(c){
+  if (!c) return;
+  const assets = SHEET.assets || [];
+  const catSegs = assets.map(a => [a.name, (a.latest&&a.latest.amount)||0]).filter(x=>x[1]>0);
+  $("#donut-cat").innerHTML = donutSVG(catSegs, 190, 66, 26, "总资产", (c.totalA/10000).toFixed(1)+"万");
+  $("#legend-cat").innerHTML = legend(catSegs.map(([k,v]) => [CAT_COLORS[k]||"#cbd5e1", k, v, c.totalA?v/c.totalA*100:0]));
+  const roleSegs = [["进攻", c.atk, "#f97316"], ["防守", c.def, "#22c55e"]];
+  const rc = {"进攻":"#f97316","防守":"#22c55e"};
+  $("#donut-role").innerHTML = donutSVG(roleSegs, 190, 66, 26, "攻防比", `${(c.atkPct*100).toFixed(0)}/${(100-c.atkPct*100).toFixed(0)}`);
+  $("#legend-role").innerHTML = roleSegs.map(([n,v]) =>
+    `<div class="lg"><span class="dot" style="background:${rc[n]}"></span>${n}资产<i>${c.totalA?(v/c.totalA*100).toFixed(1):'0.0'}%</i><b>${fmt(v)}</b></div>`).join("");
+  const ddPct = c.dd*100;
+  const pos = Math.min(ddPct/40*100, 100);
+  let zone, zoneCls;
+  if (ddPct < 10) { zone = "低于你的承受区间（偏保守，收益弹性有限）"; zoneCls = "#0ea5e9"; }
+  else if (ddPct <= 30) { zone = "在你的 10%–30% 承受区间内 ✅"; zoneCls = "#16a34a"; }
+  else { zone = "超出 30% 承受上限，请降低进攻仓位 🔴"; zoneCls = "#dc2626"; }
+  $("#drawdown-gauge").innerHTML = `
+    <div style="font-size:12.5px;color:var(--mut);margin-bottom:6px">极端行情回撤预算估算：<b style="color:${zoneCls}">≈ ${ddPct.toFixed(1)}%</b>（进攻×45% + 防守×5%）</div>
+    <div style="position:relative;height:14px;border-radius:7px;overflow:hidden;background:linear-gradient(90deg,#bae6fd 0 25%,#bbf7d0 25% 75%,#fecaca 75% 100%)">
+      <div style="position:absolute;left:${pos}%;top:-2px;width:3px;height:18px;background:#1e293b;border-radius:2px"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--mut);margin-top:3px"><span>0%</span><span>10%</span><span>30%</span><span>40%</span></div>
+    <div style="font-size:12px;margin-top:5px;color:${zoneCls};font-weight:600">${zone}</div>`;
+}
+function lineChart(series, labels, w, h){
+  const pl=50, pr=12, pt=14, pb=26;
+  const allv = series.flatMap(s=>s.values).filter(v => v != null);
+  if (!allv.length) return '<div class="hint">暂无数据。</div>';
+  let vmin = Math.min(...allv), vmax = Math.max(...allv);
+  if (vmax === vmin) vmax = vmin + 1;
+  const span = vmax - vmin; vmin -= span*0.12; vmax += span*0.12;
+  const n = labels.length;
+  const X = i => pl + i*(w-pl-pr)/Math.max(n-1,1);
+  const Y = v => pt + (vmax-v)*(h-pt-pb)/(vmax-vmin);
+  let g = "";
+  for (let k=0;k<5;k++){
+    const yv = vmin+(vmax-vmin)*k/4, y = Y(yv);
+    g += `<line x1="${pl}" y1="${y.toFixed(1)}" x2="${w-pr}" y2="${y.toFixed(1)}" stroke="#e2e8f0"/>
+          <text x="${pl-6}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="10" fill="#64748b">${(yv/10000).toFixed(1)}万</text>`;
+  }
+  series.forEach(s => {
+    let seg = [];
+    const flush = () => {
+      if (seg.length > 1) g += `<polyline points="${seg.map(p=>p.join(",")).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round"/>`;
+      seg.forEach(p => g += `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${s.color}"/>`);
+      seg = [];
+    };
+    s.values.forEach((v,i) => { if (v == null) flush(); else seg.push([+X(i).toFixed(1), +Y(v).toFixed(1)]); });
+    flush();
+  });
+  labels.forEach((lb,i)=>{ if (i % Math.max(1, Math.floor(labels.length/6)) === 0 || i === labels.length-1)
+    g += `<text x="${X(i).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="10" fill="#64748b">${esc(lb)}</text>`; });
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto">${g}</svg>`;
+}
+function renderTrend(){
+  const root = $("#chart-trend"), lg = $("#legend-trend");
+  if (!SHEET || !SHEET.savings || !SHEET.savings.series){ root.innerHTML = '<div class="hint">财务表同步后自动显示趋势。</div>'; return; }
+  const months = SHEET.savings.series.map(p => p.ym);
+  const labels = months.map(ym => ym.slice(2));
+  const series = [{name:"存款合计", values: SHEET.savings.series.map(p=>p.amount), color:"#1e293b"}];
+  for (const a of (SHEET.assets||[])){
+    const m = new Map(a.series.map(p => [p.ym, p.amount]));
+    series.push({name:a.name, values: months.map(ym => m.has(ym) ? m.get(ym) : null), color: CAT_COLORS[a.name]||"#94a3b8"});
+  }
+  root.innerHTML = lineChart(series, labels, 560, 240);
+  lg.innerHTML = series.map(s => {
+    const last = [...s.values].reverse().find(v => v != null);
+    return `<div class="lg"><span class="dot" style="background:${s.color}"></span>${esc(s.name)}<b>${last!=null?fmt(last):"—"}</b></div>`;
+  }).join("");
+}
+
+/* ================= 资产明细 · 收益 · 规则 ================= */
+function renderSheetTable(){
+  const tb = $("#tbl-sheet-assets tbody");
+  if (!SHEET || !SHEET.assets){ tb.innerHTML = '<tr><td colspan="5" class="hint">待同步。</td></tr>'; return; }
+  const c = sheetCompute();
+  tb.innerHTML = SHEET.assets.map(a => {
+    const role = ROLE_MAP[a.name] || "def";
+    const pv = a.profit;
+    const pCls = pv == null ? "" : pv >= 0 ? "up" : "down";
+    const pTxt = pv == null ? "—" : (pv > 0 ? "+" : "") + fmt2(pv);
+    return `<tr>
+      <td>${esc(a.name)} <span class="role-tag ${role}">${role==="atk"?"⚔️ 进攻":"🛡️ 防守"}</span></td>
+      <td class="num">${fmt(a.latest.amount)}</td>
+      <td class="num">${a.pct != null ? a.pct.toFixed(2)+"%" : "—"}</td>
+      <td class="num ${pCls}">${pTxt}</td>
+      <td>${esc(a.rule || "—")}</td>
+    </tr>`;
+  }).join("") + `<tr style="font-weight:700;background:#f8fafc">
+      <td>合计（存款合计）</td>
+      <td class="num">${fmt(c.totalA)}</td>
+      <td class="num">100%</td>
+      <td class="num ${c.profit==null?"":c.profit>=0?"up":"down"}">${c.profit==null?"—":(c.profit>0?"+":"")+fmt2(c.profit)}</td>
+      <td style="font-weight:400;color:var(--mut)">净资产 ${fmt(c.net)} 元（已扣分期）</td>
+    </tr>`;
+}
+
+/* ================= 负债（仅信用卡分期） ================= */
+function renderLiabCard(){
+  const root = $("#liab-root"), badge = $("#liab-badge");
+  if (!SHEET || !SHEET.liabs || SHEET.liabs.total == null){
+    badge.textContent = "未同步";
+    root.innerHTML = '<div class="hint">财务表同步后显示。</div>';
+    return;
+  }
+  badge.textContent = "已同步 " + (SHEET.synced_at || ""); badge.className = "badge ok";
+  const L = SHEET.liabs, c = sheetCompute();
+  const series = (L.series || []).slice();
+  // 截取：从首个非零月开始，尾部连续零只保留一个
+  let start = series.findIndex(p => p.amount > 0); if (start < 0) start = 0;
+  let end = series.length;
+  while (end - 1 > start && series[end-1].amount === 0 && series[end-2].amount === 0) end--;
+  const seg = series.slice(start, end);
+  const cur = seg.find(p => p.ym === (SHEET.savings.latest||{}).ym) || seg[0];
+  const doneMonth = seg.length && seg[seg.length-1].amount === 0 ? seg[seg.length-1].ym : null;
+  const chart = seg.length > 1 ? lineChart([{name:"剩余待还", values: seg.map(p=>p.amount), color:"#dc2626"}], seg.map(p=>p.ym.slice(2)), 420, 150) : "";
+  root.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+      <div class="kpi"><div class="t">分期剩余总额</div><div class="v red">${fmt(L.total)}</div></div>
+      <div class="kpi"><div class="t">本期余额（${esc(cur?cur.ym:"")}）</div><div class="v amber">${cur?fmt2(cur.amount):"—"}</div></div>
+      <div class="kpi"><div class="t">负债/总资产</div><div class="v ${(c.debtRatio>=0.3)?'red':'green'}">${(c.debtRatio*100).toFixed(1)}%</div></div>
+    </div>
+    ${chart ? `<div style="font-size:12px;color:var(--mut);margin:0 0 4px">还款进度（表格内剩余待还余额 · ${doneMonth?("预计 "+doneMonth.slice(0,4)+"-"+doneMonth.slice(5)+" 前后还清"):"按计划推进"}）</div>${chart}` : ""}
+    <div class="hint">口径：负债仅统计<b>信用卡分期</b>；房租、车子费用等不计入（按你的要求）。数据随财务表自动更新。</div>`;
+}
+
+/* ================= 记账本消费 · 当月/月/季/年 多周期分析 ================= */
+const SP_STATE = { mode: "cur", month: null, year: null, q: null };
+const SP_COLORS = ["#f97316","#38bdf8","#6366f1","#22c55e","#eab308","#ec4899","#14b8a6","#8b5cf6","#f43f5e","#84cc16","#0ea5e9","#a3a3a3"];
+const spMonths = () => (SPEND && SPEND.months) || [];
+const spGet = ym => (SPEND && SPEND.by_month) ? (SPEND.by_month[ym] || null) : null;
+const spYears = () => [...new Set(spMonths().map(m => +m.slice(0,4)))].sort();
+const ymPrev = ym => { const p = ym.split("-").map(Number); return p[1] === 1 ? (p[0]-1) + "-12" : p[0] + "-" + String(p[1]-1).padStart(2,"0"); };
+const qMonths = (y,q) => [0,1,2].map(i => y + "-" + String(q*3+i+1).padStart(2,"0"));
+const spPct = (a,b) => (b ? (a-b)/b*100 : null);
+const dTxt = p => p == null ? "—" : (p>0?"+":"") + p.toFixed(1) + "%";
+const dCls = p => p == null ? "" : p > 0 ? "t-red" : p < 0 ? "t-green" : "";
+const kCls = p => p == null ? "" : p > 0 ? "red" : p < 0 ? "green" : "";
+function spAgg(ymList){
+  const list = ymList.map(spGet).filter(Boolean);
+  if (!list.length) return null;
+  const cats = {}; let total = 0, days = 0, count = 0;
+  const daily = [], top = [];
+  for (const m of list){
+    total += m.total; days += m.days; count += m.count;
+    for (const c of m.cats) cats[c.name] = (cats[c.name]||0) + c.amount;
+    daily.push(...m.daily); top.push(...m.top);
+  }
+  daily.sort((a,b) => a.date < b.date ? -1 : 1);
+  top.sort((a,b) => b.amount - a.amount);
+  return { total, days, count, day_avg: days ? total/days : 0,
+    cats: Object.entries(cats).map(([name,amount]) => ({name, amount})).sort((a,b) => b.amount-a.amount),
+    daily, top: top.slice(0,5), n: list.length };
+}
+function barSVG(items, opt){
+  opt = opt || {};
+  const w = opt.w||560, h = opt.h||210, pl = 46, pr = 10, pt = 18, pb = 24;
+  const n = items.length;
+  if (!n) return '<div class="hint">暂无数据。</div>';
+  const vmax = Math.max(...items.map(i => i.value), 1) * 1.08;
+  const X = i => pl + (i+0.5)*(w-pl-pr)/n;
+  const Y = v => pt + (vmax-v)*(h-pt-pb)/vmax;
+  const ylab = v => v >= 10000 ? (v/10000).toFixed(1)+"万" : String(Math.round(v));
+  let g = "";
+  for (let k=0;k<=4;k++){
+    const yv = vmax*k/4, y = Y(yv);
+    g += `<line x1="${pl}" y1="${y.toFixed(1)}" x2="${w-pr}" y2="${y.toFixed(1)}" stroke="#e2e8f0"/><text x="${pl-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#64748b">${ylab(yv)}</text>`;
+  }
+  const bw = Math.min(30, (w-pl-pr)/n*0.6);
+  const showVal = n <= 16;
+  const step = Math.max(1, Math.ceil(n/12));
+  items.forEach((it,i) => {
+    const x = X(i)-bw/2, y = Y(it.value);
+    g += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0,h-pb-y).toFixed(1)}" rx="3" fill="${it.color||opt.color||"#f97316"}" opacity="${it.dim?0.3:1}"/>`;
+    if (showVal && it.value > 0) g += `<text x="${X(i).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="9.5" fill="#475569">${ylab(it.value)}</text>`;
+    if (i % step === 0 || i === n-1) g += `<text x="${X(i).toFixed(1)}" y="${h-8}" text-anchor="middle" font-size="10" fill="#64748b">${esc(it.label)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto">${g}</svg>`;
+}
+function spCatBars(cats, total, prevCats){
+  if (!cats.length) return '<div class="hint">暂无分类数据。</div>';
+  const max = cats[0].amount || 1;
+  const pm = {}; (prevCats||[]).forEach(c => pm[c.name] = c.amount);
+  const hasPrev = (prevCats||[]).length > 0;
+  return cats.slice(0,10).map((c,i) => {
+    const share = total ? c.amount/total*100 : 0;
+    const d = hasPrev ? spPct(c.amount, pm[c.name]) : null;
+    return `<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px">
+      <span style="width:64px;color:var(--mut);text-align:right;flex:none">${esc(c.name)}</span>
+      <div style="flex:1;background:#f1f5f9;border-radius:5px;overflow:hidden;height:14px"><div style="width:${(c.amount/max*100).toFixed(1)}%;height:100%;background:${SP_COLORS[i%SP_COLORS.length]};border-radius:5px"></div></div>
+      <b style="min-width:72px;text-align:right;font-variant-numeric:tabular-nums">${fmt2(c.amount)}</b>
+      <span style="min-width:50px;text-align:right;color:var(--mut)">${share.toFixed(1)}%</span>
+      <span style="min-width:58px;text-align:right" class="${dCls(d)}">${hasPrev ? dTxt(d) : ""}</span>
+    </div>`;
+  }).join("");
+}
+function spInsightCard(items){
+  if (!items.length) return "";
+  return `<div style="background:linear-gradient(135deg,#fff7ed,#fffbeb);border:1px solid #fed7aa;border-radius:12px;padding:12px 14px;margin-top:12px">
+    <div style="font-weight:700;font-size:13px;margin-bottom:6px">🧠 智能分析（规则引擎自动生成 · 随每日同步更新）</div>
+    <ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.9;color:#7c2d12">${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
+}
+function spMedianOf(arr){ if (!arr.length) return null; const a = [...arr].sort((x,y) => x-y); return a[Math.floor(a.length/2)]; }
+function spRecentTable(){
+  const rows = (SPEND.recent||[]).map(r => `<tr><td style="white-space:nowrap">${esc(r.date.slice(5))}</td><td>${esc(r.cat)}${r.note && r.note !== r.cat ? ` <span style="color:var(--mut)">· ${esc(r.note)}</span>` : ""}</td><td class="num" style="white-space:nowrap">${fmt2(r.amount)}</td></tr>`).join("");
+  return `<div class="sp-lab">最近记录</div><div class="scroll-x"><table><thead><tr><th>日期</th><th>分类/备注</th><th class="num">金额(元)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function spTopTable(agg){
+  if (!agg || !agg.top.length) return "";
+  return `<div class="sp-lab">期间大额 TOP${agg.top.length}</div><div class="scroll-x"><table><thead><tr><th>日期</th><th>分类/备注</th><th class="num">金额(元)</th></tr></thead><tbody>${agg.top.map(r => `<tr><td style="white-space:nowrap">${esc(r.date)}</td><td>${esc(r.cat)}${r.note && r.note !== r.cat ? ` <span style="color:var(--mut)">· ${esc(r.note)}</span>` : ""}</td><td class="num" style="white-space:nowrap">${fmt2(r.amount)}</td></tr>`).join("")}</tbody></table></div>`;
+}
+/* ---- 分析规则引擎 ---- */
+function spAnalysisMonth(ym, isCurrent){
+  const m = spGet(ym); if (!m) return [];
+  const items = [];
+  const p = ym.split("-").map(Number), y = p[0], mo = p[1];
+  const prev = spGet(ymPrev(ym)), yoy = spGet((y-1) + "-" + String(mo).padStart(2,"0"));
+  items.push(`${ym} 共支出 <b>${fmt2(m.total)}</b> 元 · ${m.count} 笔 · ${m.days} 天有记录 · 日均 <b>${fmt2(m.day_avg)}</b> 元。`);
+  if (isCurrent){
+    const dim = new Date(y, mo, 0).getDate();
+    let elapsed = dim;
+    const bdt = new Date((SPEND.backup_date || todayStr()) + "T00:00:00");
+    if (!isNaN(bdt) && bdt.getFullYear() === y && bdt.getMonth()+1 === mo) elapsed = Math.max(1, bdt.getDate());
+    const proj = m.total/elapsed*dim;
+    items.push(`按当前节奏推算全月 ≈ <b>${fmt2(proj)}</b> 元${prev ? `，上月全月 ${fmt2(prev.total)} 元（<span class="${dCls(spPct(proj,prev.total))}">${dTxt(spPct(proj,prev.total))}</span>）` : ""}。`);
+  } else if (prev){
+    const d = spPct(m.total, prev.total);
+    items.push(`环比 <span class="${dCls(d)}">${dTxt(d)}</span>（上月 ${fmt2(prev.total)} 元）${Math.abs(d||0) >= 20 ? "，波动较大，可对照下方分类变动找原因。" : "。"}`);
+  }
+  if (yoy) items.push(`同比去年同月 <span class="${dCls(spPct(m.total,yoy.total))}">${dTxt(spPct(m.total,yoy.total))}</span>（${fmt2(yoy.total)} 元）。`);
+  if (m.cats.length){
+    const t = m.total||1, top3 = m.cats.slice(0,3);
+    if (top3[0].amount/t >= 0.4) items.push(`集中度偏高：<b>${esc(top3[0].name)}</b> 占 ${(top3[0].amount/t*100).toFixed(1)}%，建议检查该类目有无优化空间。`);
+    else items.push(`结构 TOP3：${top3.map(c => `${esc(c.name)} ${(c.amount/t*100).toFixed(0)}%`).join(" / ")}，合计 ${(top3.reduce((s,c) => s+c.amount, 0)/t*100).toFixed(0)}%。`);
+  }
+  if (prev && prev.cats.length){
+    const pm = {}; prev.cats.forEach(c => pm[c.name] = c.amount);
+    const cm = {}; m.cats.forEach(c => cm[c.name] = c.amount);
+    let up = null, dn = null;
+    for (const n of new Set([...Object.keys(pm), ...Object.keys(cm)])){
+      const d = (cm[n]||0) - (pm[n]||0);
+      if (!up || d > up.d) up = {n, d};
+      if (!dn || d < dn.d) dn = {n, d};
+    }
+    if (up && up.d > 0 && dn && dn.d < 0) items.push(`较上月：增最多 <b>${esc(up.n)}</b> +${fmt2(up.d)} 元；降最多 <b>${esc(dn.n)}</b> −${fmt2(-dn.d)} 元。`);
+  }
+  const big = m.top.filter(r => r.amount >= Math.max(500, m.day_avg*3)).slice(0,3);
+  if (big.length) items.push(`大额提醒：${big.map(r => `${r.date.slice(5)} ${esc(r.note)}（${esc(r.cat)}）${fmt2(r.amount)} 元`).join("；")}。`);
+  const med = spMedianOf(spMonths().filter(x => x !== SPEND.month && x !== ym).slice(-12).map(x => spGet(x).total));
+  if (med){
+    const base = isCurrent ? m.total/Math.max(1,m.days)*30 : m.total;
+    const r = base/med;
+    items.push(r > 1.3 ? `支出明显高于近一年月中位数（${fmt2(med)} 元），留意一次性大额或可控类目超支。` : r < 0.9 ? `支出控制良好，低于近一年月中位数（${fmt2(med)} 元）。` : `支出处于近一年正常区间（月中位数 ${fmt2(med)} 元）。`);
+  }
+  return items;
+}
+function spAnalysisQuarter(y, q, agg){
+  if (!agg) return [];
+  const items = [];
+  const pairs = qMonths(y,q).map(ym => [ym, spGet(ym)]).filter(x => x[1]);
+  items.push(`${y} 年 Q${q+1} 合计 <b>${fmt2(agg.total)}</b> 元 · 月均 ${fmt2(agg.total/(pairs.length||1))} · 日均 ${fmt2(agg.day_avg)} 元 · ${agg.count} 笔。`);
+  if (pairs.length >= 2){
+    const a = pairs[0][1].total, b = pairs[pairs.length-1][1].total, d = spPct(b,a);
+    items.push(`季内走势：${+pairs[0][0].slice(5)} 月 ${fmt2(a)} → ${+pairs[pairs.length-1][0].slice(5)} 月 ${fmt2(b)}（${dTxt(d)}），${d > 15 ? "逐月走高，下季可提前设预算上限。" : d < -15 ? "逐月回落，节奏向好。" : "整体平稳。"}`);
+  }
+  const pq = q === 0 ? spAgg(qMonths(y-1,3)) : spAgg(qMonths(y,q-1));
+  if (pq) items.push(`环比上季 <span class="${dCls(spPct(agg.total,pq.total))}">${dTxt(spPct(agg.total,pq.total))}</span>（上季 ${fmt2(pq.total)} 元）。`);
+  const yq = spAgg(qMonths(y-1,q));
+  if (yq) items.push(`同比去年同季 <span class="${dCls(spPct(agg.total,yq.total))}">${dTxt(spPct(agg.total,yq.total))}</span>（${fmt2(yq.total)} 元）。`);
+  if (agg.cats.length) items.push(`结构 TOP3：${agg.cats.slice(0,3).map(c => `${esc(c.name)} ${(c.amount/(agg.total||1)*100).toFixed(0)}%`).join(" / ")}。`);
+  if (pairs.length){
+    const peak = pairs.reduce((a,b) => a[1].total >= b[1].total ? a : b);
+    items.push(`峰值月 ${peak[0]}（${fmt2(peak[1].total)} 元），当月 TOP1 类目为 ${esc(peak[1].cats[0].name)}。`);
+  }
+  if (pq && pq.cats.length){
+    const pm = {}; pq.cats.forEach(c => pm[c.name] = c.amount);
+    let up = null;
+    for (const c of agg.cats){ const d = c.amount-(pm[c.name]||0); if (!up || d > up.d) up = {n:c.name, d}; }
+    if (up && up.d > 0) items.push(`较上季增加最多：<b>${esc(up.n)}</b> +${fmt2(up.d)} 元。`);
+  }
+  return items;
+}
+function spAnalysisYear(y, agg){
+  if (!agg) return [];
+  const items = [];
+  const yms = spMonths().filter(m => m.startsWith(y+"-"));
+  const pym = spMonths().filter(m => m.startsWith((y-1)+"-"));
+  items.push(`${y} 年合计 <b>${fmt2(agg.total)}</b> 元（${yms.length} 个有记录月份）· 月均 ${fmt2(agg.total/(yms.length||1))} · 日均 ${fmt2(agg.day_avg)} 元 · ${agg.count} 笔。`);
+  const py = spAgg(pym);
+  if (py) items.push(`同比 <span class="${dCls(spPct(agg.total,py.total))}">${dTxt(spPct(agg.total,py.total))}</span>（${y-1} 年 ${fmt2(py.total)} 元）；若记录月份数不同，看月均更公平：${fmt2(agg.total/(yms.length||1))} vs ${fmt2(py.total/(pym.length||1))}。`);
+  const pairs = yms.map(m => [m, spGet(m)]);
+  if (pairs.length){
+    const peak = pairs.reduce((a,b) => a[1].total >= b[1].total ? a : b);
+    const low = pairs.reduce((a,b) => a[1].total <= b[1].total ? a : b);
+    items.push(`峰值月 ${peak[0]}（${fmt2(peak[1].total)} 元，TOP1 ${esc(peak[1].cats[0].name)}）；最低月 ${low[0]}（${fmt2(low[1].total)} 元）。`);
+  }
+  if (agg.cats.length) items.push(`年度结构 TOP3：${agg.cats.slice(0,3).map(c => `${esc(c.name)} ${(c.amount/(agg.total||1)*100).toFixed(0)}%`).join(" / ")}。`);
+  if (py && py.cats.length){
+    const pm = {}; py.cats.forEach(c => pm[c.name] = c.amount);
+    let up = null;
+    for (const c of agg.cats){ const d = c.amount-(pm[c.name]||0); if (!up || d > up.d) up = {n:c.name, d}; }
+    if (up && up.d > 0) items.push(`较去年增加最多：<b>${esc(up.n)}</b> +${fmt2(up.d)} 元，可作为明年预算重点。`);
+  }
+  return items;
+}
+/* ---- 主渲染 ---- */
+function renderSpend(){
+  const root = $("#fin-spend"), badge = $("#spend-badge");
+  const months = spMonths();
+  if (!SPEND || !SPEND.synced_at || !months.length){
+    badge.textContent = "未同步";
+    root.innerHTML = '<div class="hint">暂无消费数据：确认 iPhone「记账本」App 已开启 iCloud 同步，Mac 每天 08:00 自动读取。</div>';
+    return;
+  }
+  badge.textContent = "备份 " + (SPEND.backup_date||"") + " · 历史 " + months.length + " 个月";
+  badge.className = "badge ok";
+  const years = spYears();
+  if (!SP_STATE.month || !spGet(SP_STATE.month)) SP_STATE.month = months[months.length-1];
+  if (!SP_STATE.year || !years.includes(SP_STATE.year)) SP_STATE.year = years[years.length-1];
+  if (SP_STATE.q == null) SP_STATE.q = Math.floor((+SP_STATE.month.slice(5)-1)/3);
+
+  const segBtn = (key,label) => `<button class="sp-seg${SP_STATE.mode===key?" on":""}" onclick="spSetMode('${key}')">${label}</button>`;
+  let sel = "";
+  if (SP_STATE.mode === "month")
+    sel = `<select class="sp-sel" onchange="spSetMonth(this.value)">${[...months].reverse().map(m => `<option value="${m}"${m===SP_STATE.month?" selected":""}>${m}</option>`).join("")}</select>`;
+  if (SP_STATE.mode === "quarter")
+    sel = `<select class="sp-sel" onchange="spSetYear(this.value)">${[...years].reverse().map(y => `<option value="${y}"${y===SP_STATE.year?" selected":""}>${y} 年</option>`).join("")}</select>` +
+          [0,1,2,3].map(q => `<button class="sp-seg${SP_STATE.q===q?" on":""}" onclick="spSetQ(${q})">Q${q+1}</button>`).join("");
+  if (SP_STATE.mode === "year")
+    sel = `<select class="sp-sel" onchange="spSetYear(this.value)">${[...years].reverse().map(y => `<option value="${y}"${y===SP_STATE.year?" selected":""}>${y} 年</option>`).join("")}</select>`;
+  const ctrl = `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      ${segBtn("cur","当月")}${segBtn("month","按月")}${segBtn("quarter","按季")}${segBtn("year","按年")}${sel}</div>`;
+
+  let label = "", agg = null, chart = "", k4 = null, analysis = [], prevCats = null, recent = false, chartTitle = "每日支出";
+  if (SP_STATE.mode === "cur" || SP_STATE.mode === "month"){
+    const ym = SP_STATE.mode === "cur" ? (spGet(SPEND.month) ? SPEND.month : months[months.length-1]) : SP_STATE.month;
+    const isCur = ym === SPEND.month;
+    agg = spAgg([ym]);
+    if (!agg){ root.innerHTML = ctrl + '<div class="hint">该月暂无消费记录，切换其他周期试试。</div>'; return; }
+    label = isCur ? `${ym}（当月进行中）` : ym;
+    chart = barSVG(agg.daily.map(d => ({label: String(+d.date.slice(8)), value: d.amount})), {color:"#f97316"});
+    prevCats = (spGet(ymPrev(ym))||{}).cats || null;
+    recent = isCur;
+    chartTitle = "每日支出";
+    const yy = ym.split("-").map(Number);
+    const pm = spGet(ymPrev(ym)), yoy = spGet((yy[0]-1)+"-"+String(yy[1]).padStart(2,"0"));
+    if (isCur){
+      const dim = new Date(yy[0], yy[1], 0).getDate();
+      let elapsed = dim; const bdt = new Date((SPEND.backup_date||todayStr())+"T00:00:00");
+      if (!isNaN(bdt) && bdt.getFullYear()===yy[0] && bdt.getMonth()+1===yy[1]) elapsed = Math.max(1, bdt.getDate());
+      k4 = {t:"推算全月", v:fmt2(agg.total/elapsed*dim), cls:"amber", s:`按 ${elapsed}/${dim} 天进度`};
+    } else if (pm){
+      const d = spPct(agg.total, pm.total);
+      k4 = {t:"环比上月", v:dTxt(d), cls:kCls(d), s:`上月 ${fmt2(pm.total)}`};
+    } else if (yoy){
+      const d = spPct(agg.total, yoy.total);
+      k4 = {t:"同比去年", v:dTxt(d), cls:kCls(d), s:`去年同月 ${fmt2(yoy.total)}`};
+    } else k4 = {t:"环比上月", v:"—", cls:"", s:"无上月数据"};
+    analysis = spAnalysisMonth(ym, isCur);
+  } else if (SP_STATE.mode === "quarter"){
+    const y = SP_STATE.year, q = SP_STATE.q;
+    agg = spAgg(qMonths(y,q));
+    label = `${y} 年 Q${q+1}`;
+    chartTitle = "月度支出";
+    chart = barSVG(qMonths(y,q).map(ym => ({label: (+ym.slice(5))+"月", value: agg ? (spGet(ym)||{total:0}).total : 0, dim: !spGet(ym)})), {color:"#6366f1"});
+    const pq = q === 0 ? spAgg(qMonths(y-1,3)) : spAgg(qMonths(y,q-1));
+    const yq = spAgg(qMonths(y-1,q));
+    if (agg && pq){ const d = spPct(agg.total, pq.total); k4 = {t:"环比上季", v:dTxt(d), cls:kCls(d), s:`上季 ${fmt2(pq.total)}`}; }
+    else if (agg && yq){ const d = spPct(agg.total, yq.total); k4 = {t:"同比去年同季", v:dTxt(d), cls:kCls(d), s:`去年 ${fmt2(yq.total)}`}; }
+    else k4 = {t:"环比上季", v:"—", cls:"", s:"无历史季数据"};
+    analysis = spAnalysisQuarter(y, q, agg);
+  } else {
+    const y = SP_STATE.year;
+    const yms = months.filter(m => m.startsWith(y+"-"));
+    agg = spAgg(yms);
+    label = `${y} 年`;
+    chartTitle = "月度支出";
+    chart = barSVG(yms.map(ym => ({label: (+ym.slice(5))+"月", value: spGet(ym).total})), {color:"#22c55e"});
+    const py = spAgg(months.filter(m => m.startsWith((y-1)+"-")));
+    if (agg && py){ const d = spPct(agg.total, py.total); k4 = {t:"同比去年", v:dTxt(d), cls:kCls(d), s:`去年 ${fmt2(py.total)}`}; }
+    else k4 = {t:"同比去年", v:"—", cls:"", s:"无去年数据"};
+    analysis = spAnalysisYear(y, agg);
+  }
+  if (!agg){ root.innerHTML = ctrl + '<div class="hint">该周期暂无消费记录，切换其他周期试试。</div>'; return; }
+
+  const donutSegs = agg.cats.slice(0,8).map((c,i) => [c.name, c.amount, SP_COLORS[i%SP_COLORS.length]]);
+  const other = agg.cats.slice(8).reduce((s,c) => s+c.amount, 0);
+  if (other > 0) donutSegs.push(["其他", other, "#a3a3a3"]);
+
+  root.innerHTML = ctrl + `
+    <div class="sp-kpis">
+      <div class="kpi"><div class="t">总支出 · ${esc(label)}</div><div class="v red">${fmt2(agg.total)}</div><div class="d">${agg.count} 笔</div></div>
+      <div class="kpi"><div class="t">日均</div><div class="v amber">${fmt2(agg.day_avg)}</div><div class="d">按 ${agg.days} 个有记录天</div></div>
+      <div class="kpi"><div class="t">最大单笔</div><div class="v">${agg.top.length?fmt2(agg.top[0].amount):"—"}</div><div class="d">${agg.top.length?esc((agg.top[0].note||agg.top[0].cat||"").slice(0,10)):""}</div></div>
+      <div class="kpi"><div class="t">${esc(k4.t)}</div><div class="v ${k4.cls}">${esc(k4.v)}</div><div class="d">${esc(k4.s)}</div></div>
+    </div>
+    <div class="grid2" style="gap:10px">
+      <div><div class="sp-lab">${chartTitle}</div>${chart}</div>
+      <div><div class="sp-lab">分类占比</div><div class="chart-flex"><div>${donutSVG(donutSegs,170,58,22,"总支出",(agg.total/10000).toFixed(1)+"万")}</div><div class="legend">${legend(donutSegs.map(([n,v,col]) => [col,n,v,agg.total?v/agg.total*100:0]))}</div></div></div>
+    </div>
+    <div class="sp-lab">分类明细（金额 · 占比 · 较上期涨跌）</div>
+    ${spCatBars(agg.cats, agg.total, prevCats)}
+    ${spInsightCard(analysis)}
+    ${spTopTable(agg)}
+    ${recent ? spRecentTable() : ""}
+    <div class="hint" style="margin-top:10px">数据源：记账本 App iCloud 备份（备份日 ${esc(SPEND.backup_date||"")}）· T+1 更新 · 涨跌色：红=支出增加、绿=支出减少 · 分析由规则引擎自动生成，仅供财商训练参考，不构成投资建议。</div>`;
+}
+function spSetMode(m){ SP_STATE.mode = m; renderSpend(); }
+function spSetMonth(v){ SP_STATE.month = v; renderSpend(); }
+function spSetYear(v){ SP_STATE.year = +v; renderSpend(); }
+function spSetQ(q){ SP_STATE.q = q; renderSpend(); }
+
+/* ================= T+1 资讯渲染（数据驱动） ================= */
+const SEC_EMOJI = {"宏观与政策":"🏛️","A股市场":"🇨🇳","海外市场":"🌍","地缘与商品":"🌋"};
+function pctTxt(p){ return p == null ? "—" : (p > 0 ? "+" : "") + (+p).toFixed(2) + "%"; }
+function pctCls(p){ return p == null ? "" : p > 0 ? "up" : p < 0 ? "down" : ""; }
+function renderNews(){
+  const N = window.NEWS_DATA, root = $("#news-root");
+  if (!N){ root.innerHTML = '<div class="hint">资讯数据未加载：请确认 <code>data/news.js</code> 存在（更新看板数据后刷新即可）。</div>'; return; }
+  $("#news-badge").textContent = `复盘 ${N.review_date} · 更新于 ${N.date}${N.generated_by === "auto" ? " · ⚙️ 自动生成" : ""}`;
+  const rows = (N.market_table||[]).map(r =>
+    `<tr><td>${esc(r.name)}</td><td class="num">${esc(r.close)}</td><td class="num ${pctCls(r.pct)}">${pctTxt(r.pct)}</td><td>${esc(r.note||"")}</td></tr>`).join("");
+  const secs = (N.sections||[]).map(s => `
+    <h4>${SEC_EMOJI[s.title]||"📌"} ${esc(s.title)}</h4>
+    <ul>${(s.items||[]).map(it => `<li>${esc(it.text)}${it.why ? `<div class="why">💡 与你的关联：${esc(it.why)}</div>` : ""}</li>`).join("")}</ul>`).join("");
+  const watch = (N.today_watch||[]).map(t => `<li>${esc(typeof t === "string" ? t : (t.text||""))}</li>`).join("");
+  root.innerHTML = `
+    ${N.note ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 12px;font-size:12px;color:#92400e;line-height:1.6;margin-bottom:12px">${esc(N.note)}</div>` : ""}
+    <div class="scroll-x"><table class="mkt-table">
+      <thead><tr><th>指数/品种</th><th class="num">收盘</th><th class="num">涨跌</th><th>备注</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    ${N.turnover ? `<div class="hint">📊 ${esc(N.turnover)}</div>` : ""}
+    <div class="news-block">${secs}
+      ${watch ? `<h4>🔭 今日盘中速览</h4><ul>${watch}</ul>` : ""}
+    </div>
+    ${N.commentary ? `<div style="background:linear-gradient(135deg,#eef2ff,#f0f9ff);border:1px solid #c7d2fe;border-radius:12px;padding:14px;margin-top:16px">
+      <h4 style="margin:0 0 8px">🧭 今日点评（贴合你的组合）</h4>
+      <p style="font-size:13.5px;line-height:1.8;margin:0">${esc(N.commentary)}</p></div>` : ""}
+    <div class="hint">⚠️ 以上为 T+1 复盘内容，非实时行情，不构成投资建议。</div>`;
+}
+function renderMiniBrief(){
+  const N = window.NEWS_DATA, el = $("#mini-brief");
+  if (!N){ $("#mini-brief-badge").textContent = "未更新"; el.innerHTML = '<div class="hint">暂无 T+1 简报数据。</div>'; return; }
+  $("#mini-brief-badge").textContent = `复盘 ${N.review_date}${N.generated_by === "auto" ? " · ⚙️" : ""}`;
+  const chips = (N.market_table||[]).slice(0,6).map(r =>
+    `<span class="idx-chip">${esc(r.name)} <b class="${pctCls(r.pct)}">${pctTxt(r.pct)}</b></span>`).join("");
+  const top = (N.sections||[]).flatMap(s => (s.items||[]).slice(0,1).map(it => ({t:s.title, ...it}))).slice(0,3);
+  el.innerHTML = `
+    <div class="idx-chips">${chips}</div>
+    <ul style="margin:10px 0 0;padding-left:18px;font-size:13px;line-height:1.7">
+      ${top.map(it => `<li><b>${esc(it.t)}</b>：${esc(it.text)}</li>`).join("")}
+    </ul>
+    <div style="margin-top:10px"><button class="btn pri sm" onclick="switchTab('news')">查看完整复盘 →</button></div>`;
+}
+
+/* ================= 每日解读一本书 ================= */
+function renderBooks(){
+  const B = window.BOOKS_DATA, root = $("#book-today"), arch = $("#book-archive"), badge = $("#book-badge");
+  if (!B || !B.entries || !B.entries.length){
+    badge.textContent = "未加载";
+    root.innerHTML = '<div class="hint">书籍数据未加载（data/books.js 缺失）。</div>';
+    return;
+  }
+  const today = todayStr();
+  const idx = B.entries.findIndex(e => e.date === today);
+  let entry, mode;
+  if (idx >= 0){ entry = B.entries[idx]; mode = "today"; }
+  else if (today < B.entries[0].date){ entry = B.entries[0]; mode = "preview"; }
+  else { entry = B.entries[B.entries.length-1]; mode = "ended"; }
+  badge.textContent = mode === "today" ? `今日 ${today} · 自动更新` : mode === "preview" ? `${entry.date} 开始连载` : "本季完结 · 下季待续";
+  badge.className = mode === "today" ? "badge ok" : "badge";
+  const dayLabel = ["核心命题","方法论","落地避坑"][entry.day-1] || "";
+  root.innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+      <span class="badge">${esc(entry.date)}</span>
+      <span class="badge warn">第 ${entry.day}/3 天 · ${dayLabel}</span>
+      <span class="badge ok">主题：${esc(entry.theme)}</span>
+    </div>
+    <h3 style="margin:4px 0 2px;font-size:17px">《${esc(entry.book)}》<span style="font-size:12px;color:var(--mut);font-weight:500">　${esc(entry.author)}</span></h3>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.7;color:#92400e;margin:10px 0">💡 ${esc(entry.hook)}</div>
+    <p style="font-size:13.8px;line-height:1.85;margin:8px 0">${esc(entry.core)}</p>
+    <div style="font-size:13px;font-weight:700;margin:10px 0 6px">🔑 今日三个要点</div>
+    <ul style="margin:0;padding-left:20px;font-size:13.5px;line-height:1.8">${entry.points.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.75;color:#166534;margin-top:12px">✅ <b>今日行动</b>（贴合你的账本）：${esc(entry.action)}</div>
+    <div class="hint">⚠️ 内容为财商教育解读，不构成投资建议；书中观点需结合你自己的现金流与风险承受力独立判断。</div>`;
+  const byBook = new Map();
+  for (const e of [...B.entries].reverse()){
+    if (!byBook.has(e.book)) byBook.set(e.book, []);
+    byBook.get(e.book).push(e);
+  }
+  arch.innerHTML = [...byBook.entries()].map(([book, list]) => {
+    const newest = list[0], oldest = list[list.length-1];
+    return `<details class="book-item">
+      <summary>📖 《${esc(book)}》 <span class="hint">· ${esc(newest.author)} · ${esc(newest.theme)} · ${oldest.date} ~ ${newest.date}</span></summary>
+      ${list.map(e => `<div class="book-day"><b>第 ${e.day}/3 天（${e.date}）</b>　${esc(e.hook)}<div class="why">${esc(e.core)}</div></div>`).join("")}
+    </details>`;
+  }).join("");
+}
+
+/* ================= 每月新增资金分配计算器（42/40/18） ================= */
+function calcAlloc(){
+  const m = +($("#calc-monthly").value) || 0;
+  const atk = Math.round(m * 0.42), def = Math.round(m * 0.40), flex = m - atk - def;
+  const year = m * 12;
+  $("#calc-out").innerHTML = m <= 0 ? '<div class="hint">请输入每月可存金额。</div>' : `
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px">
+      <div style="font-size:12px;color:#c2410c;font-weight:700">⚔️ 进攻定投 · 42%</div>
+      <div style="font-size:19px;font-weight:750;margin:4px 0">${fmt(atk)} 元/月</div>
+      <div style="font-size:11.5px;color:#9a3412;line-height:1.6">宽基指数为主+少量卫星；发薪后 1–2 天自动扣款，回撤期不停</div>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px">
+      <div style="font-size:12px;color:#15803d;font-weight:700">🛡️ 防守垫 · 40%</div>
+      <div style="font-size:19px;font-weight:750;margin:4px 0">${fmt(def)} 元/月</div>
+      <div style="font-size:11.5px;color:#166534;line-height:1.6">R2 银行理财/纯债基金；压舱石，也是再平衡的弹药库</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px">
+      <div style="font-size:12px;color:#1d4ed8;font-weight:700">💧 机动池 · 18%</div>
+      <div style="font-size:19px;font-weight:750;margin:4px 0">${fmt(flex)} 元/月</div>
+      <div style="font-size:11.5px;color:#1e40af;line-height:1.6">货币基金；覆盖年度保费/意外支出，极端回撤时才动用加仓</div>
+    </div>
+  </div>
+  <div class="hint">全年新增 ≈ <b>${fmt(year)} 元</b>${Math.abs(year-100000)<=10000 ? "，与「年存 10 万」画像节奏吻合 ✅" : "（画像参考：约 10 万/年 ≈ 8,300 元/月）"}。比例来自第 1 讲管道，可按自身现金流在 ±5pp 内微调。</div>`;
+}
+
+/* ================= Tab 切换（侧边栏 + 底部 TabBar 双导航） ================= */
+function switchTab(name){
+  document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll("section.tab").forEach(s => s.classList.toggle("active", s.id === "tab-" + name));
+  window.scrollTo({top: 0});
+}
+document.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+
+/* ================= 初始化 ================= */
+const C = sheetCompute();
+renderKPIs(C);
+renderDonuts(C);
+renderTrend();
+renderSheetTable();
+renderLiabCard();
+renderSpend();
+renderNews();
+renderMiniBrief();
+renderBooks();
+calcAlloc();
+{
+  const N = window.NEWS_DATA;
+  $("#badge-date").textContent = N ? `T+1 · 复盘 ${N.review_date}` : "T+1";
+  if (SHEET && SHEET.synced_at) $("#badge-sync").textContent = `财务表已同步 ${SHEET.synced_at}`;
+  else $("#badge-sync").textContent = "财务表未同步";
+  if (SHEET && SHEET.savings && SHEET.savings.latest){
+    $("#sheet-badge").textContent = "已同步 " + (SHEET.synced_at || ""); $("#sheet-badge").className = "badge ok";
+  } else {
+    $("#sheet-badge").textContent = "未同步";
+  }
+}
+</script>
+</body>
+</html>
